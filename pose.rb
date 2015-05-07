@@ -2,7 +2,7 @@ require 'erb'
 require 'highline/import'
 
 Metric = Struct.new(:energy_exp, :delay_exp)
-FPE = Struct.new(:max_power, :min_power)
+Envelope = Struct.new(:max_power, :min_power)
 Code = Struct.new(:name, :energy, :time, :power)
 
 module Metrics
@@ -29,7 +29,7 @@ def metric_parameters
 end
 
 def envelope_parameters
-  envelope = FPE.new
+  envelope = Envelope.new
   envelope.min_power = ask('System Min Power (W): ', Float) { |q| q.above = 0 }
   envelope.max_power = ask('System Max Power (W): ', Float) { |q| q.above = envelope.min_power }
   envelope
