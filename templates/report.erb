@@ -6,9 +6,18 @@
 \usepackage{pgfplots}
 \pgfplotsset{compat=newest}
 
-\title{POSE Report: Zombie Apocalypse}
+\title{POSE Report: <%= model.name %>}
 \author{}
 \date{}
+
+
+<% time_range = model.E.time - model.A.time %>
+<% xmin = model.A.time - 0.15 * time_range %>
+<% xmax = model.E.time + 0.15 * time_range %>
+
+<% energy_range = model.B.energy - model.C.energy %>
+<% ymin = model.C.energy - 0.35 * energy_range %>
+<% ymax = model.B.energy + 0.35 * energy_range %>
 
 \begin{document}
 \maketitle
@@ -21,9 +30,10 @@
     axis y line=left,
   	xlabel={Runtime \emph{(s)}},
     ylabel={Energy \emph{(J)}},    
-    xmin=25, xmax=31,
-    ymin=650, ymax=1650,
+    xmin=<%= sprintf('%.0f', xmin.floor) %>, xmax=<%= sprintf('%.0f', xmax.ceil) %>,
+    ymin=<%= sprintf('%.0f', ymin.floor) %>, ymax=<%= sprintf('%.0f', ymax.ceil) %>,
     width=\plotwidth,
+    height=23em,
     legend columns=3,
     legend to name=minimd:legend,
     legend style={/tikz/every even column/.append style={column sep=0.2cm}} % space out columns a bit
@@ -91,4 +101,7 @@
  \end{axis}
 \end{tikzpicture}
 \end{figure}
+
+\section{Summary}
+The upper limit of energy to be saved from power optimization alone is <%= sprintf('%.2f', model.code.energy - model.D.energy) %>J.
 \end{document}
