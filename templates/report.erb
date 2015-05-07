@@ -30,20 +30,20 @@
     ]
 
     %% Model Parameters %%
-    \pgfmathsetmacro{\baselinepower}{<%= envelope.min_power %>}
-    \pgfmathsetmacro{\rooflinepower}{<%= envelope.max_power %>}
-    \pgfmathsetmacro{\codepower}{<%= code.power %>} 
-    \pgfmathsetmacro{\codetime}{<%= code.time %>}
-    \pgfmathsetmacro{\codeenergy}{<%= code.energy %>}
-    \pgfmathsetmacro{\energyexp}{<%= metric.energy_exp %>}
-    \pgfmathsetmacro{\timeexp}{<%= metric.delay_exp %>}
+    \pgfmathsetmacro{\baselinepower}{<%= model.min_power %>}
+    \pgfmathsetmacro{\rooflinepower}{<%= model.max_power %>}
+    \pgfmathsetmacro{\codepower}{<%= model.code.power %>} 
+    \pgfmathsetmacro{\codetime}{<%= model.code.time %>}
+    \pgfmathsetmacro{\codeenergy}{<%= model.code.energy %>}
+    \pgfmathsetmacro{\energyexp}{<%= model.energy_exp %>}
+    \pgfmathsetmacro{\timeexp}{<%= model.delay_exp %>}
 
     % Sadly, pgfplots sucks too much to calculate cube roots
     % These values are calculated with a ruby script in tools
-    \pgfmathsetmacro{\blnodex}{29.897382525363962}
-    \pgfmathsetmacro{\brnodex}{30.695542582732617}
-    \pgfmathsetmacro{\trnodex}{26.129586468297543}
-    \pgfmathsetmacro{\tlnodex}{25.450152567484604}
+    \pgfmathsetmacro{\blnodex}{<%= model.C.time %>}
+    \pgfmathsetmacro{\brnodex}{<%= model.E.time %>}
+    \pgfmathsetmacro{\trnodex}{<%= model.B.time %>}
+    \pgfmathsetmacro{\tlnodex}{<%= model.A.time %>}
 
     %% Intermezzo Values %%
     \pgfmathsetmacro{\brnodey}{\brnodex * \baselinepower}

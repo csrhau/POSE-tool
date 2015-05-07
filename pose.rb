@@ -1,61 +1,94 @@
 require 'erb'
 require 'highline/import'
 
-Metric = Struct.new(:energy_exp, :delay_exp)
-Envelope = Struct.new(:max_power, :min_power)
-Code = Struct.new(:name, :energy, :time, :power)
-
-module Metrics
-  Energy = Metric.new(1.0, 0.0) # Simple energy
-  EDP = Metric.new(1.0, 1.0)    # Energy Delay Product
-  ED2P = Metric.new(1.0, 2.0)   # Energy Delay Squared Product
-  ED3P = Metric.new(1.0, 3.0)   # Energy Delay Cubed Product
-end
-
-def metric_parameters
-  choose do |menu|
-    menu.prompt = 'Please select a metric: '
-    menu.choice('Energy') { Metrics::Energy }
-    menu.choice('Energy Delay Product') { Metrics::EDP }
-    menu.choice('Energy Delay Squared Product') { Metrics::ED2P }
-    menu.choice('Energy Delay Cubed Product') { Metrics::ED3P }
-    menu.choice('Custom') do
-      custom = Metric.new
-      custom.energy_exp = ask("Energy Exponent (m): ", Float)
-      custom.delay_exp = ask("Delay Exponent (n): ", Float)
-      custom
-    end
+class Point
+  attr_reader :energy, :time
+  def initialize(energy, time)
+    @energy = energy
+    @time = time
+  end
+  def power
+    @energy / @time
   end
 end
 
-def envelope_parameters
-  envelope = Envelope.new
-  envelope.min_power = ask('System Min Power (W): ', Float) { |q| q.above = 0 }
-  envelope.max_power = ask('System Max Power (W): ', Float) { |q| q.above = envelope.min_power }
-  envelope
+class Pose
+  attr_accessor :min_power, :max_power    # System Parameters
+  attr_accessor :energy_exp, :delay_exp   # Metric Parameters
+  attr_accessor :name, :code  # Code Parameters (name and a Point)
+
+  def opt_intercept(point, power)
+  ((point.energy**@energy_exp * point.time**@delay_exp) / power) \
+    ** (1 / (@energy_exp * (@delay_exp + 1)))
+  end
+
+  # Pmax / Optimisation Limit Interept
+  def A
+    a_time = opt_intercept(C(), @max_power)
+    Point.new(a_time * @max_power, a_time)
+  end
+
+  # Pmax / Optimisation Bound Intercept
+  def B
+    b_time = opt_intercept(@code, @max_power)
+    Point.new(b_time * @max_power, b_time)
+  end
+
+  # Pmin / Contribution Bound Intercept
+  def C
+    c_time = ((@code.time ** (@energy_exp + @delay_exp) \
+               * @min_power ** @energy_exp) / @code.power**@energy_exp) \
+               **(1.0/ (@delay_exp + 1))
+    Point.new(c_time * @min_power, c_time)
+  end
+
+  # Pmin at code time
+  def D
+    Point.new(@code.time * min_power, @code.time)
+  end
+
+  # Pmin / Optimisation Bound Intercept
+  def E
+    e_time = opt_intercept(@code, @min_power)
+    Point.new(e_time * @min_power, e_time)
+  end
 end
 
-def code_parameters
-  code = Code.new
-  code.name = ask('Code Name: ')
-  code.energy = ask('Code Energy (J): ', Float) { |q| q.above = 0 }
-  code.time = ask('Code Time (S): ', Float) { |q| q.above = 0 }
-  code.power = code.energy / code.time
-  code
+def build_model
+  model = Pose.new
+  choose do |menu|
+    menu.prompt = 'Please select a metric: '
+    menu.choices('Energy', 'EDP', 'ED^2P', 'ED^3P', 'Custom') do |metric|
+      case metric
+      when 'Energy'
+        model.energy_exp, model.delay_exp = 1.0, 0.0
+      when 'EDP'
+        model.energy_exp, model.delay_exp = 1.0, 1.0
+      when 'ED^2P'
+        model.energy_exp, model.delay_exp = 1.0, 2.0
+      when 'ED^3P'
+        model.energy_exp, model.delay_exp = 1.0, 3.0
+      when 'Custom'
+        model.energy_exp = ask("Energy Exponent (m): ", Float)
+        model.delay_exp = ask("Delay Exponent (n): ", Float)
+      end
+    end
+  end
+  model.min_power = ask('System Min Power (W): ', Float) { |q| q.above = 0 }
+  model.max_power = ask('System Max Power (W): ', Float) { |q| q.above = model.min_power }
+  model.name = ask('Code Name: ')
+  code_energy = ask('Code Energy (J): ', Float) { |q| q.above = 0 }
+  code_time = ask('Code Time (S): ', Float) do |q|
+    q.below = code_energy / model.min_power
+    q.above = code_energy / model.max_power
+  end   
+  model.code = Point.new(code_energy, code_time)
+  model
 end
 
-# TODO - add bounds checking for parameters
-# TODO - support arguments or queries (make it query for missing arguments)
-# TODO - support 2 out of 3 runtime / power / energy
-
+# Let's Do this!
 say 'POSE Model creation'
-metric = metric_parameters()
-envelope = envelope_parameters()
-code = code_parameters()
-if code.power > envelope.max_power or code.power < envelope.min_power
-  raise 'Invalid Model Parameters'
-end
-
+model = build_model
 erbfile = ask('Report Template: ') { |t| t.default = 'templates/report.erb' }
 template = ERB.new(File.new(erbfile).read, nil, '-')
 outfile = ask ('Output Filename: ') { |o| o.default = 'report.tex' }
