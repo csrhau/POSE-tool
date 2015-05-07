@@ -1,1 +1,91 @@
-Report For <%= code.name %>
+\documentclass[a4paper]{article}
+\usepackage{url} 
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage[parfill]{parskip}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+
+\title{POSE Report: Zombie Apocalypse}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\begin{figure}[ht]
+\begin{tikzpicture}
+  \providecommand{\plotwidth}{\linewidth}
+  \begin{axis}[
+    axis on top,
+    axis x line=bottom,
+    axis y line=left,
+  	xlabel={Runtime \emph{(s)}},
+    ylabel={Energy \emph{(J)}},    
+    xmin=25, xmax=31,
+    ymin=650, ymax=1650,
+    width=\plotwidth,
+    legend columns=3,
+    legend to name=minimd:legend,
+    legend style={/tikz/every even column/.append style={column sep=0.2cm}} % space out columns a bit
+    ]
+
+    %% Model Parameters %%
+    \pgfmathsetmacro{\baselinepower}{26.876067}
+    \pgfmathsetmacro{\rooflinepower}{43.570651}
+    \pgfmathsetmacro{\codepower}{27.959470} 
+    \pgfmathsetmacro{\codetime}{30.293834}
+    % Sadly, pgfplots sucks too much to calculate cube roots
+    % These values are calculated with a ruby script in tools
+    \pgfmathsetmacro{\blnodex}{29.897382525363962}
+    \pgfmathsetmacro{\brnodex}{30.695542582732617}
+    \pgfmathsetmacro{\trnodex}{26.129586468297543}
+    \pgfmathsetmacro{\tlnodex}{25.450152567484604}
+
+    %% Intermezzo Values %%
+    \pgfmathsetmacro{\brnodey}{\brnodex * \baselinepower}
+    \pgfmathsetmacro{\blnodey}{\blnodex * \baselinepower}
+    \pgfmathsetmacro{\tlnodey}{\tlnodex * \rooflinepower}
+    \pgfmathsetmacro{\trnodey}{\trnodex * \rooflinepower}
+    \pgfmathsetmacro{\codeenergy}{\codepower * \codetime}
+    \pgfmathsetmacro{\baselineenergy}{\baselinepower * \codetime}
+
+    % arguments: code power, code time, x - todo, apparently not supposed to do pgfmathparse
+    \pgfmathdeclarefunction{metricbound}{3}{%
+      \pgfmathparse{((#1 * #2^3) / #3^2)}%
+    }
+    \pgfmathdeclarefunction{definitionbound}{3}{%
+      \pgfmathparse{((#1 / #2^3) * #3^4)}%
+    }
+
+    % BETA ROOFLINE BOUND 
+    \addplot[color=red, domain=\pgfkeysvalueof{/pgfplots/xmin}:\pgfkeysvalueof{/pgfplots/xmax}] {\rooflinepower * x};
+    \addlegendentry{$P_{max}$ Bound}
+
+    % ALPHA BASELINE BOUND 
+    \addplot[color=green, domain=\pgfkeysvalueof{/pgfplots/xmin}:\pgfkeysvalueof{/pgfplots/xmax}] {\baselinepower * x};
+    \addlegendentry{$P_{min}$ Bound} 
+
+    \addplot[color=orange, domain=\trnodex:\brnodex] { metricbound(\codepower, \codetime, x)};
+    \addlegendentry{Optimisation Bound}
+
+    \addplot[color=blue!80, domain=\blnodex:\codetime] { definitionbound(\codepower, \codetime, x)};
+    \addlegendentry{Contribution Bound}
+
+    \addplot[color=orange, dashed, domain=\tlnodex:\blnodex] {metricbound(\baselinepower, \blnodex, x)};
+    \addlegendentry{Optimisation Limit}
+
+    % Constant Time (Vertical) dotted line
+    \draw[densely dotted] ({axis cs:\codetime,\baselineenergy}) -- ({axis cs:\codetime,\codeenergy});
+
+    \node[circle,fill,inner sep=2pt] at (axis cs:\codetime,\codeenergy) {};
+    \node[above right] at (axis cs:\codetime,\codeenergy) {$\theta$};
+    
+    \node [above] at ({axis cs:\tlnodex, \tlnodey}) {A};
+    \node [above] at ({axis cs:\trnodex, \trnodey}) {B};
+    \node [below] at ({axis cs:\blnodex, \blnodey}) {C};
+    \node [below] at ({axis cs:\codetime,\baselineenergy}) {D};
+    \node [below] at ({axis cs:\brnodex, \brnodey}) {E};
+ \end{axis}
+\end{tikzpicture}
+\end{figure}
+\end{document}
