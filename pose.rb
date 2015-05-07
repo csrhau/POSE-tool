@@ -2,7 +2,7 @@ require 'erb'
 require 'highline/import'
 
 Metric = Struct.new(:energy_exp, :delay_exp)
-FPE = Struct.new(:p_max, :p_min)
+FPE = Struct.new(:max_power, :min_power)
 Code = Struct.new(:name, :energy, :time, :power)
 
 module Metrics
@@ -30,16 +30,16 @@ end
 
 def envelope_parameters
   envelope = FPE.new
-  envelope.p_max = ask('System Max Power (W): ', Float)
-  envelope.p_min = ask('System Min Power (W): ', Float)
+  envelope.min_power = ask('System Min Power (W): ', Float) { |q| q.above = 0 }
+  envelope.max_power = ask('System Max Power (W): ', Float) { |q| q.above = envelope.min_power }
   envelope
 end
 
 def code_parameters
   code = Code.new
   code.name = ask('Code Name: ')
-  code.energy = ask('Code Energy (J): ', Float)
-  code.time = ask('Code Time (S): ', Float)
+  code.energy = ask('Code Energy (J): ', Float) { |q| q.above = 0 }
+  code.time = ask('Code Time (S): ', Float) { |q| q.above = 0 }
   code.power = code.energy / code.time
   code
 end
@@ -52,6 +52,10 @@ say 'POSE Model creation'
 metric = metric_parameters()
 envelope = envelope_parameters()
 code = code_parameters()
+if code.power > envelope.max_power or code.power < envelope.min_power
+  raise 'Invalid Model Parameters'
+end
+
 erbfile = ask('Report Template: ') { |t| t.default = 'templates/report.erb' }
 template = ERB.new(File.new(erbfile).read, nil, '-')
 outfile = ask ('Output Filename: ') { |o| o.default = 'report.tex' }

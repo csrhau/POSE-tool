@@ -30,10 +30,14 @@
     ]
 
     %% Model Parameters %%
-    \pgfmathsetmacro{\baselinepower}{26.876067}
-    \pgfmathsetmacro{\rooflinepower}{43.570651}
-    \pgfmathsetmacro{\codepower}{27.959470} 
-    \pgfmathsetmacro{\codetime}{30.293834}
+    \pgfmathsetmacro{\baselinepower}{<%= envelope.min_power %>}
+    \pgfmathsetmacro{\rooflinepower}{<%= envelope.max_power %>}
+    \pgfmathsetmacro{\codepower}{<%= code.power %>} 
+    \pgfmathsetmacro{\codetime}{<%= code.time %>}
+    \pgfmathsetmacro{\codeenergy}{<%= code.energy %>}
+    \pgfmathsetmacro{\energyexp}{<%= metric.energy_exp %>}
+    \pgfmathsetmacro{\timeexp}{<%= metric.delay_exp %>}
+
     % Sadly, pgfplots sucks too much to calculate cube roots
     % These values are calculated with a ruby script in tools
     \pgfmathsetmacro{\blnodex}{29.897382525363962}
@@ -46,17 +50,16 @@
     \pgfmathsetmacro{\blnodey}{\blnodex * \baselinepower}
     \pgfmathsetmacro{\tlnodey}{\tlnodex * \rooflinepower}
     \pgfmathsetmacro{\trnodey}{\trnodex * \rooflinepower}
-    \pgfmathsetmacro{\codeenergy}{\codepower * \codetime}
     \pgfmathsetmacro{\baselineenergy}{\baselinepower * \codetime}
 
-    % arguments: code power, code time, x - todo, apparently not supposed to do pgfmathparse
-    \pgfmathdeclarefunction{metricbound}{3}{%
-      \pgfmathparse{((#1 * #2^3) / #3^2)}%
+    % arguments: code power, code time, x, n 
+    \pgfmathdeclarefunction{metricbound}{4}{%
+      \pgfmathparse{((#1 * #2^(#4 + 1)) / #3^#4)}%
     }
-    \pgfmathdeclarefunction{definitionbound}{3}{%
-      \pgfmathparse{((#1 / #2^3) * #3^4)}%
+    \pgfmathdeclarefunction{definitionbound}{4}{%
+      \pgfmathparse{((#1 / #2^(#4 + 1)) * #3^(#4 + 2))}%
     }
-
+ 
     % BETA ROOFLINE BOUND 
     \addplot[color=red, domain=\pgfkeysvalueof{/pgfplots/xmin}:\pgfkeysvalueof{/pgfplots/xmax}] {\rooflinepower * x};
     \addlegendentry{$P_{max}$ Bound}
@@ -65,13 +68,13 @@
     \addplot[color=green, domain=\pgfkeysvalueof{/pgfplots/xmin}:\pgfkeysvalueof{/pgfplots/xmax}] {\baselinepower * x};
     \addlegendentry{$P_{min}$ Bound} 
 
-    \addplot[color=orange, domain=\trnodex:\brnodex] { metricbound(\codepower, \codetime, x)};
+    \addplot[color=orange, domain=\trnodex:\brnodex] { metricbound(\codepower, \codetime, x, \timeexp)};
     \addlegendentry{Optimisation Bound}
 
-    \addplot[color=blue!80, domain=\blnodex:\codetime] { definitionbound(\codepower, \codetime, x)};
+    \addplot[color=blue!80, domain=\blnodex:\codetime] { definitionbound(\codepower, \codetime, x, \timeexp)};
     \addlegendentry{Contribution Bound}
 
-    \addplot[color=orange, dashed, domain=\tlnodex:\blnodex] {metricbound(\baselinepower, \blnodex, x)};
+    \addplot[color=orange, dashed, domain=\tlnodex:\blnodex] {metricbound(\baselinepower, \blnodex, x, \timeexp)};
     \addlegendentry{Optimisation Limit}
 
     % Constant Time (Vertical) dotted line
