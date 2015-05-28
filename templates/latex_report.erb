@@ -1,6 +1,7 @@
 <% require 'to_latex' %>
 \documentclass[a4paper]{article}
 \usepackage{url} 
+\usepackage{booktabs}
 \usepackage{geometry}
 \usepackage{graphicx}
 \usepackage[parfill]{parskip}
@@ -11,11 +12,9 @@
 \author{}
 \date{}
 
-
 <% time_range = model.E.time - model.A.time %>
 <% xmin = model.A.time - 0.15 * time_range %>
 <% xmax = model.E.time + 0.15 * time_range %>
-
 <% energy_range = model.B.energy - model.C.energy %>
 <% ymin = model.C.energy - 0.35 * energy_range %>
 <% ymax = model.B.energy + 0.35 * energy_range %>
@@ -104,5 +103,23 @@
 \end{figure}
 
 \section{Summary}
-The upper limit of energy to be saved from power optimization alone is <%= sprintf('%.2f', model.code.energy - model.D.energy) %>J.
-\end{document}
+\begin{table}
+\centering
+\begin{tabular}{cccc} \toprule
+POSE Point & Runtime (s) & Energy (J) & $E^<%= sprintf '%g', model.energy_exp %>t^<%= sprintf '%g', model.delay_exp%>$ \\
+\midrule
+$\theta$ & <%= sprintf( '%.2f', model.code.time) %> & <%= sprintf( '%.2f', model.code.energy) %> &  <%=sprintf( '%.0f', model.metric_value(model.code)) %> \\
+  A & <%= sprintf( '%.2f', model.A.time) %> & <%= sprintf( '%.2f', model.A.energy) %> &  <%=sprintf( '%.0f', model.metric_value(model.A)) %> \\
+  B & <%= sprintf( '%.2f', model.B.time) %> & <%= sprintf( '%.2f', model.B.energy) %> &  <%=sprintf( '%.0f', model.metric_value(model.B)) %> \\
+  C & <%= sprintf( '%.2f', model.C.time) %> & <%= sprintf( '%.2f', model.C.energy) %> &  <%=sprintf( '%.0f', model.metric_value(model.C)) %> \\
+  D & <%= sprintf( '%.2f', model.D.time) %> & <%= sprintf( '%.2f', model.D.energy) %> &  <%=sprintf( '%.0f', model.metric_value(model.D)) %> \\
+  E & <%= sprintf( '%.2f', model.E.time) %> & <%= sprintf( '%.2f', model.E.energy) %> &  <%=sprintf( '%.0f', model.metric_value(model.E)) %> \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{itemize}
+  \item At most <%= sprintf('%.2f', model.code.energy - model.D.energy) %>J can be saved by reducing power consumption.
+\end{itemize}
+
+\end{document} 

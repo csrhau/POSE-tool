@@ -52,6 +52,10 @@ class Pose
     e_time = opt_intercept(@code, @min_power)
     Point.new(e_time * @min_power, e_time)
   end
+
+  def metric_value(point)
+    point.energy**@energy_exp * point.time**@delay_exp
+  end
 end
 
 def build_model
