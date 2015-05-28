@@ -108,18 +108,30 @@
 \begin{tabular}{cccc} \toprule
 POSE Point & Runtime (s) & Energy (J) & $E^<%= sprintf '%g', model.energy_exp %>t^<%= sprintf '%g', model.delay_exp%>$ \\
 \midrule
-$\theta$ & <%= sprintf( '%.2f', model.code.time) %> & <%= sprintf( '%.2f', model.code.energy) %> &  <%=sprintf( '%.0f', model.metric_value(model.code)) %> \\
-  A & <%= sprintf( '%.2f', model.A.time) %> & <%= sprintf( '%.2f', model.A.energy) %> &  <%=sprintf( '%.0f', model.metric_value(model.A)) %> \\
-  B & <%= sprintf( '%.2f', model.B.time) %> & <%= sprintf( '%.2f', model.B.energy) %> &  <%=sprintf( '%.0f', model.metric_value(model.B)) %> \\
-  C & <%= sprintf( '%.2f', model.C.time) %> & <%= sprintf( '%.2f', model.C.energy) %> &  <%=sprintf( '%.0f', model.metric_value(model.C)) %> \\
-  D & <%= sprintf( '%.2f', model.D.time) %> & <%= sprintf( '%.2f', model.D.energy) %> &  <%=sprintf( '%.0f', model.metric_value(model.D)) %> \\
-  E & <%= sprintf( '%.2f', model.E.time) %> & <%= sprintf( '%.2f', model.E.energy) %> &  <%=sprintf( '%.0f', model.metric_value(model.E)) %> \\
+$\theta$ & <%= sprintf( '%.2f', model.code.time) %> & <%= sprintf( '%.2f', model.code.energy) %> & <%=sprintf( '%.0f', model.metric_value(model.code)) %> \\
+  A & <%= sprintf( '%.2f', model.A.time) %> & <%= sprintf( '%.2f', model.A.energy) %> & <%=sprintf( '%.0f', model.metric_value(model.A)) %> \\
+  B & <%= sprintf( '%.2f', model.B.time) %> & <%= sprintf( '%.2f', model.B.energy) %> & <%=sprintf( '%.0f', model.metric_value(model.B)) %> \\
+  C & <%= sprintf( '%.2f', model.C.time) %> & <%= sprintf( '%.2f', model.C.energy) %> & <%=sprintf( '%.0f', model.metric_value(model.C)) %> \\
+  D & <%= sprintf( '%.2f', model.D.time) %> & <%= sprintf( '%.2f', model.D.energy) %> & <%=sprintf( '%.0f', model.metric_value(model.D)) %> \\
+  E & <%= sprintf( '%.2f', model.E.time) %> & <%= sprintf( '%.2f', model.E.energy) %> & <%=sprintf( '%.0f', model.metric_value(model.E)) %> \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{itemize}
   \item At most <%= sprintf('%.2f', model.code.energy - model.D.energy) %>J can be saved by reducing power consumption.
+  \item Maximum slowdown from energy optimisation is <%= sprintf('%.2f', model.E.time - model.code.time) %>s
+  <% c_metric = model.metric_value(model.C) %>
+  <% t_metric = model.metric_value(model.code) %>
+  \item Lowest $E^<%= sprintf('%.0f', model.energy_exp) %>t^<%= sprintf('%0.f', model.delay_exp) %>$ value within POSE:  <%=sprintf( '%.0f', c_metric) %>
+  \begin{itemize}
+  \item Corresponds to a <%= sprintf('%.2f', 100 * (t_metric - c_metric) / t_metric) %>\% reduction
+  \end{itemize}
+  <% b_time = model.B.time %>
+  <% a_time = model.A.time %>
+  <% t_time = model.code.time %>
+  \item A speedup of <%= sprintf('%.2f', t_time - b_time) %>s, or <%= sprintf('%.2f', (t_time / b_time)) %>x, strictly outperforms $\theta$
+  \item A speedup of <%= sprintf('%.2f', t_time - a_time) %>s, or <%= sprintf('%.2f', (t_time / a_time)) %>x, strictly outperform any power-optimized version of $\theta$
 \end{itemize}
 
 \end{document} 
