@@ -90,8 +90,8 @@ end
 # Let's Do this!
 say 'POSE Model creation'
 model = build_model
-erbfile = ask('Report Template: ') { |t| t.default = 'templates/report.erb' }
+erbfile = ask('Report Template: ') { |t| t.default = 'templates/latex_report.erb' }
 template = ERB.new(File.new(erbfile).read, nil, '-')
-outfile = ask ('Output Filename: ') { |o| o.default = 'report.tex' }
+outfile = ask ('Output Filename: ') { |o| o.default = "#{model.name}.tex" }
 report = template.result(binding)
 File.write(outfile, report)

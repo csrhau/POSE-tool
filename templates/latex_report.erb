@@ -1,3 +1,4 @@
+<% require 'to_latex' %>
 \documentclass[a4paper]{article}
 \usepackage{url} 
 \usepackage{geometry}
@@ -6,7 +7,7 @@
 \usepackage{pgfplots}
 \pgfplotsset{compat=newest}
 
-\title{POSE Report: <%= model.name %>}
+\title{POSE Report: <%= model.name.to_latex %>}
 \author{}
 \date{}
 
