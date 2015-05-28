@@ -57,7 +57,8 @@ end
 def build_model
   model = Pose.new
   choose do |menu|
-    menu.prompt = 'Please select a metric: '
+    menu.default = 'ED^2P'
+    menu.prompt = "Please select a metric |#{menu.default}|: "
     menu.choices('Energy', 'EDP', 'ED^2P', 'ED^3P', 'Custom') do |metric|
       case metric
       when 'Energy'
