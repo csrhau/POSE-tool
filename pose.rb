@@ -18,8 +18,16 @@ class Pose
   attr_accessor :name, :code  # Code Parameters (name and a Point)
 
   def opt_intercept(point, power)
-  ((point.energy**@energy_exp * point.time**@delay_exp) / power) \
-    ** (1 / (@energy_exp * (@delay_exp + 1)))
+    # p_theta = point.power
+    # t_theta = point.time
+    (point.energy**@energy_exp * point.time**@delay_exp / power**@energy_exp) \
+      ** (1/ (@energy_exp + @delay_exp))
+  end
+
+  def cont_intercept(point, power)
+    # p_theta = point.power
+    # t_theta = point.time
+    point.time * (power / point.power) ** (@energy_exp / (@energy_exp + @delay_exp))
   end
 
   # Pmax / Optimisation Limit Interept
@@ -36,9 +44,7 @@ class Pose
 
   # Pmin / Contribution Bound Intercept
   def C
-    c_time = ((@code.time ** (@energy_exp + @delay_exp) \
-               * @min_power ** @energy_exp) / @code.power**@energy_exp) \
-               **(1.0/ (@delay_exp + 1))
+    c_time = cont_intercept(@code, @min_power)
     Point.new(c_time * @min_power, c_time)
   end
 
